@@ -6,6 +6,7 @@ from torch.utils.data import DataLoader
 from ignite.engine.engine import Engine, Events
 from ignite.metrics import Average, Accuracy
 from torchviz import make_dot
+import torchvision.transforms as transforms
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -17,6 +18,8 @@ from typing import Any, Dict, Sequence, Tuple, Callable, Union
 
 from model import get_ranknet_model
 from pair_dataset import MNISTPairDataset
+
+import my_dataset
 
 T = torch.Tensor
 Batch = Tuple[T, T, T]
@@ -54,12 +57,24 @@ def main(args):
     except FileExistsError:
         pass
 
+    # def transform(x):
+    #     return np.expand_dims(np.asarray(x, dtype=np.float32), 0) / 255
+    # train_dataset = MNISTPairDataset(
+    #     root=".", download=True, train=True, transform=transform)
+    # test_dataset = MNISTPairDataset(
+    #     root=".", download=True, train=False, transform=transform)
+
     def transform(x):
         return np.expand_dims(np.asarray(x, dtype=np.float32), 0) / 255
-    train_dataset = MNISTPairDataset(
-        root=".", download=True, train=True, transform=transform)
-    test_dataset = MNISTPairDataset(
-        root=".", download=True, train=False, transform=transform)
+
+    # train_dataset = MNISTPairDataset(
+    #     root="./AFLW", download=True, train=True, transform=transform)
+    # test_dataset = MNISTPairDataset(
+    #     root="./AFLW", download=True, train=False, transform=transform)
+    # transform = transforms.Compose([transforms.Resize((32,32)), transforms.ToTensor()])
+
+    train_dataset = my_dataset.my_dataset('./data/train.csv', transform)
+    test_dataset = my_dataset.my_dataset('./data/test.csv', transform)
 
     train_loader = DataLoader(train_dataset, args.batch_size)
     test_loader = DataLoader(test_dataset, args.batch_size)
@@ -85,7 +100,7 @@ def main(args):
     trainer.add_event_handler(Events.EPOCH_STARTED(once=1),
                               computational_graph(predictor, train_loader,
                                                   result_path/"computational_graph.dot", device))
-
+    print("jifrjifr")
     trainer.run(train_loader, max_epochs=args.epoch)
 
 
